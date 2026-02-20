@@ -49,6 +49,7 @@ export default function AddDoctor(props) {
   const [parentOP, setParentOP] = useState("");
   const [previosData, setPreviosData] = useState("");
   const [des, setDes] = useState("");
+  
   const [name, setName] = useState("");
   const [parentCategory, setParentCategory] = useState(undefined);
   const [childCategory, setChildCategory] = useState(undefined);
