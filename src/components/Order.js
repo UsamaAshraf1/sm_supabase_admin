@@ -461,7 +461,7 @@ export default function Order() {
                     <a
                       href={`${presviosData.otherDetails?.VideoLink}`}
                       target="_blank"
-                      className="ctext"
+                      className="ctext" rel="noreferrer"
                     >
                       {presviosData.otherDetails?.VideoLink ? presviosData.otherDetails?.VideoLink : ""}
                     </a>
