@@ -55,37 +55,37 @@ export default function Productcategory(props) {
     });
     return flatArray;
   }
-  const fetchdata = async () => {
-    const rescat = await axios
-      .get(`${url}/v1/department/get/all`, {
-        headers: { authtoken: authToken, sessionid: session_id },
-      })
-      .catch((err) => console.log(err));
-    if (rescat) {
-      setCateg(rescat.data.data || "");
+  // const fetchdata = async () => {
+  //   const rescat = await axios
+  //     .get(`${url}/v1/department/get/all`, {
+  //       headers: { authtoken: authToken, sessionid: session_id },
+  //     })
+  //     .catch((err) => console.log(err));
+  //   if (rescat) {
+  //     setCateg(rescat.data.data || "");
 
-      const simpleArray = flattenArray(rescat.data.data);
-      const childoptions = simpleArray.map((e) => {
-        return {
-          label: e.des,
-          value: e.child_cid,
-        };
-      });
+  //     const simpleArray = flattenArray(rescat.data.data);
+  //     const childoptions = simpleArray.map((e) => {
+  //       return {
+  //         label: e.des,
+  //         value: e.child_cid,
+  //       };
+  //     });
 
-      const subArray = flateArray(rescat.data.data);
-      const suboptions = subArray.map((e) => {
-        return {
-          label: e.des,
-          value: e.sub_cid,
-        };
-      });
-      setChildOP(childoptions);
-      setsubOP(suboptions);
-    }
-  };
-  useEffect(() => {
-    fetchdata();
-  }, []);
+  //     const subArray = flateArray(rescat.data.data);
+  //     const suboptions = subArray.map((e) => {
+  //       return {
+  //         label: e.des,
+  //         value: e.sub_cid,
+  //       };
+  //     });
+  //     setChildOP(childoptions);
+  //     setsubOP(suboptions);
+  //   }
+  // };
+  // useEffect(() => {
+  //   fetchdata();
+  // }, []);
   // console.log(product);
   const handleArrayEvent = (e, key) => {
     setProduct({

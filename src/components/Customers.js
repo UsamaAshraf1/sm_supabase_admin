@@ -8,6 +8,7 @@ import { toast, ToastContainer } from "react-toastify";
 // import Petpop from "./Petpop.js";
 import Notifycustomerpop from "./Notifycustomerpop.js";
 import { url } from "../utils/urls.js";
+import supabase from "../utils/supabaseConfig.js";
 
 export default function Customers(props) {
   const nav = useNavigate();
@@ -28,12 +29,12 @@ export default function Customers(props) {
   const [authToken, setAuthToken] = useState(
     localStorage.getItem("authToken")
       ? localStorage.getItem("authToken" + "")
-      : ""
+      : "",
   );
   const [session_id, setSession_id] = useState(
     localStorage.getItem("session_id")
       ? localStorage.getItem("session_id" + "")
-      : ""
+      : "",
   );
 
   const downloadCSV = async () => {
@@ -44,7 +45,7 @@ export default function Customers(props) {
       try {
         const response = await axios.get(
           `${url}/v1/admin/exports/customer?from=${exportDates.from}&to=${exportDates.to}`,
-          { headers: { authtoken: authToken, sessionid: session_id } }
+          { headers: { authtoken: authToken, sessionid: session_id } },
         );
         toast.dismiss();
         console.log(response);
@@ -91,33 +92,59 @@ export default function Customers(props) {
     }
   }
 
+  // const fetchdata = async () => {
+  //   toast("Customers loading please wait", {
+  //     progress: true,
+  //   });
+  //   try {
+  //     const response = await axios.get(`${url}/v1/admin/customers`, {
+  //       headers: { authtoken: authToken, sessionid: session_id },
+  //     });
+  //     toast.dismiss();
+  //     if (response) {
+  //       const resdata = [...response?.data?.data].sort((p1, p2) =>
+  //         p1.createdAt < p2.createdAt
+  //           ? 1
+  //           : p1.createdAt > p2.createdAt
+  //             ? -1
+  //             : 0,
+  //       );
+  //       // console.log(resdata);
+  //       setcustomers(resdata);
+  //       setApiData(resdata);
+  //       setPageSize(20);
+  //     }
+  //   } catch (error) {
+  //     toast.dismiss();
+  //     toast(error.response?.data?.error || "request failed", {
+  //       type: "error",
+  //     });
+  //     console.log(error);
+  //   }
+  // };
+
   const fetchdata = async () => {
     toast("Customers loading please wait", {
       progress: true,
     });
-    try {
-      const response = await axios.get(`${url}/v1/admin/customers`, {
-        headers: { authtoken: authToken, sessionid: session_id },
-      });
-      toast.dismiss();
-      if (response) {
-        const resdata = [...response?.data?.data].sort((p1, p2) =>
-          p1.createdAt < p2.createdAt ? 1 : p1.createdAt > p2.createdAt ? -1 : 0
-        );
-        // console.log(resdata);
-        setcustomers(resdata);
-        setApiData(resdata);
-        setPageSize(20);
-      }
-    } catch (error) {
-      toast.dismiss();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("role", "user")
+      .order("created_at", { ascending: false });
+
+    if (error) {
       toast(error.response?.data?.error || "request failed", {
         type: "error",
       });
       console.log(error);
+    } else {
+      setcustomers(data);
+      setApiData(data);
+      setPageSize(20);
     }
+    toast.dismiss();
   };
-
   const data = useMemo(() => customers, [customers]);
   const columns = useMemo(() => CUSTOMERS, []);
   const tableinstance = useTable({ columns, data }, useSortBy, usePagination);
@@ -235,7 +262,7 @@ export default function Customers(props) {
                     {headerGroup.headers.map((column) => (
                       <th
                         {...column.getHeaderProps(
-                          column.getSortByToggleProps()
+                          column.getSortByToggleProps(),
                         )}
                       >
                         {column.render("Header")}
@@ -270,8 +297,9 @@ export default function Customers(props) {
                               });
                               setQuery(
                                 customers.find(
-                                  (i) => i.customer_id == row.values.customer_id
-                                )
+                                  (i) =>
+                                    i.customer_id == row.values.customer_id,
+                                ),
                               );
                               if (isNotifyColumn) {
                                 setNotifyPop(true);

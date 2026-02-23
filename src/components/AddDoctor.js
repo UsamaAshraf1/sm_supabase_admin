@@ -72,23 +72,23 @@ export default function AddDoctor(props) {
     props.setTrigger(false);
   }
 
-  const getCategory = async function (props) {
-    const categoryRes = await axios.get(`${url}/v1/department/get/all`, {
-      headers: { authtoken: authToken, sessionid: session_id },
-    });
-    // console.log(categoryRes.data.data);
-    setCategories(categoryRes.data.data);
-    const categoriesArray = categoryRes.data.data.map((e) => {
-      return {
-        label: e.des,
-        value: e.cid,
-      };
-    });
-    setParentOP(categoriesArray);
-  };
-  useEffect(() => {
-    getCategory();
-  }, []);
+  // const getCategory = async function (props) {
+  //   const categoryRes = await axios.get(`${url}/v1/department/get/all`, {
+  //     headers: { authtoken: authToken, sessionid: session_id },
+  //   });
+  //   // console.log(categoryRes.data.data);
+  //   setCategories(categoryRes.data.data);
+  //   const categoriesArray = categoryRes.data.data.map((e) => {
+  //     return {
+  //       label: e.des,
+  //       value: e.cid,
+  //     };
+  //   });
+  //   setParentOP(categoriesArray);
+  // };
+  // useEffect(() => {
+  //   getCategory();
+  // }, []);
 
   const handleCategory = function (e) {
     const value = e.value;

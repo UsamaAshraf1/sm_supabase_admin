@@ -93,25 +93,25 @@ export default function Couponpop(props) {
     }
   }
 
-  const fetchdata = async () => {
-    const response = await axios
-      .get(`${url}/v1/department/get/all`, {
-        headers: { authtoken: authToken, sessionid: session_id },
-      })
-      .catch((err) => console.log(err));
-    if (response) {
-      const resdata = response.data.data;
-      console.log(resdata);
-      const storesArray = resdata?.map((item) => {
-        return { label: item.store?.store_name, value: item.store?.sid };
-      });
-      setStores(storesArray);
-    }
-  };
+  // const fetchdata = async () => {
+  //   const response = await axios
+  //     .get(`${url}/v1/department/get/all`, {
+  //       headers: { authtoken: authToken, sessionid: session_id },
+  //     })
+  //     .catch((err) => console.log(err));
+  //   if (response) {
+  //     const resdata = response.data.data;
+  //     console.log(resdata);
+  //     const storesArray = resdata?.map((item) => {
+  //       return { label: item.store?.store_name, value: item.store?.sid };
+  //     });
+  //     setStores(storesArray);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchdata();
-  }, []);
+  // useEffect(() => {
+  //   fetchdata();
+  // }, []);
 
   const customColor = (baseStyles) => ({
     ...baseStyles,

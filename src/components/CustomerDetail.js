@@ -29,7 +29,7 @@ export default function CustomerDetail() {
       <div className="doctor-detail-container">
         {/* Profile Header */}
         <div className="doctor-profile-header">
-          {customer.profilePhoto ? (
+          {/* {customer.profilePhoto ? (
             <img
               src={customer.profilePhoto}
               alt={`${customer.first_name} ${customer.last_name}'s profile`}
@@ -37,13 +37,14 @@ export default function CustomerDetail() {
             />
           ) : (
             <div className="doctor-profile-placeholder">No Photo</div>
-          )}
+
+          )} */}
           <div className="doctor-profile-info">
             <h1>
               {customer.first_name} {customer.last_name || ""}
             </h1>
             <p className="professional-title">
-              Customer ID: {customer.customer_id}
+              Patient ID: {customer.patient_id}
             </p>
           </div>
         </div>
@@ -75,21 +76,25 @@ export default function CustomerDetail() {
             </div>
             <div className="detail-item">
               <strong>Emergency Contact:</strong>{" "}
-              {customer.emergencyContact || "N/A"}
+              {customer.emergencyphone || "N/A"}
             </div>
             <div className="detail-item">
               <strong>Country:</strong> {customer.country_name || "N/A"}
             </div>
-            <div className="detail-item">
+            {/* <div className="detail-item">
               <strong>Terms Accepted:</strong>{" "}
               {customer.termsAndCondition ? "Yes" : "No"}
-            </div>
+            </div> */}
 
             <div className="detail-item">
               <strong>Emirate Id:</strong> {customer.emirate_id || "N/A"}
             </div>
-          </div>
 
+             <div className="detail-item">
+              <strong>Passport Id:</strong> {customer.passport_id || "N/A"}
+            </div>
+          </div>
+{/* 
           <h2>Insurance Information</h2>
           <div className="detail-grid">
             <div className="detail-item">
@@ -127,7 +132,7 @@ export default function CustomerDetail() {
             <div className="detail-item">
               <strong>Device Token:</strong> {customer.device_token || "N/A"}
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
