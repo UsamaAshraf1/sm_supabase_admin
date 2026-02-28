@@ -42,6 +42,8 @@ import DepartmentDetail from "./components/DepartmentDetail";
 import ServicePackage from "./components/ServicePackage";
 import AddServicePackage from "./components/AddServicePackage";
 
+import WebHeaders from "./components/WebHeaders";
+
 function App() {
   // const [isTokenFound, setTokenFound] = useState(false);
   // const [getFcmToken, setFcmToken] = useState("");
@@ -52,7 +54,6 @@ function App() {
   //     toast(payload.notification.title, { type: "success" });
   //   })
   //   .catch((err) => console.log("failed"));
-
 
   //  tweaks
   const [isLogin, setLogin] = useState(false);
@@ -174,6 +175,11 @@ function App() {
             <Route
               path="carousels"
               element={<Carousels setName={setName} storeId={storeId} />}
+            ></Route>
+
+            <Route
+              path="headers"
+              element={<WebHeaders setName={setName} storeId={storeId} />}
             ></Route>
             <Route
               path="notifications"

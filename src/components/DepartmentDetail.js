@@ -128,39 +128,104 @@ export default function DepartmentDetail() {
   // ────────────────────────────────────────────────
   // Department Update (still using your API)
   // ────────────────────────────────────────────────
+  // const handleSaveDepartment = async () => {
+  //   if (!department?.id) return;
+
+  //   toast("Updating department...", { autoClose: false });
+
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("id", department.id);
+  //     formData.append("name", deptFormData.name);
+  //     formData.append("desc", deptFormData.desc); // ← aligned name
+  //     formData.append("short_desc", deptFormData.short_desc);
+  //     formData.append("fee", Number(deptFormData.fee) || 0);
+
+  //     if (coverPhoto) {
+  //       formData.append("cover", coverPhoto);
+  //     }
+
+  //     const res = await axios.put(`${url}/v1/department/update`, formData, {
+  //       headers: {
+  //         authtoken: authToken,
+  //         sessionid: session_id,
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
+
+  //     toast.dismiss();
+  //     toast.success("Department updated");
+  //     setIsDeptModalOpen(false);
+  //     setCoverPhoto(null);
+  //     setRefreshKey((k) => k + 1);
+  //   } catch (err) {
+  //     toast.dismiss();
+  //     toast.error(err.response?.data?.error || "Update failed");
+  //   }
+  // };
+
   const handleSaveDepartment = async () => {
-    if (!department?.id) return;
+    if (!department?.department_id) return;
 
     toast("Updating department...", { autoClose: false });
 
     try {
-      const formData = new FormData();
-      formData.append("id", department.id);
-      formData.append("name", deptFormData.name);
-      formData.append("desc", deptFormData.desc); // ← aligned name
-      formData.append("short_desc", deptFormData.short_desc);
-      formData.append("fee", Number(deptFormData.fee) || 0);
+      let coverUrl = department.cover_img; // keep old url by default
 
+      // ── 1. Upload new image if selected ────────────────────────────────
       if (coverPhoto) {
-        formData.append("cover", coverPhoto);
+        const fileExt =
+          coverPhoto.name.split(".").pop()?.toLowerCase() || "jpg";
+        const fileName = `${department.department_id}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`; // organize in folder
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("Departments") // ← change to your bucket name
+          .upload(filePath, coverPhoto, {
+            cacheControl: "3600",
+            upsert: false, // or true if you want to overwrite same path
+          });
+
+        if (uploadError) {
+          throw new Error(`Image upload failed: ${uploadError.message}`);
+        }
+
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+          .from("Departments")
+          .getPublicUrl(filePath);
+
+        coverUrl = publicUrlData.publicUrl;
+
+        // Optional: you could also remove old image here if you want
+        // (but usually better to keep old ones unless you have storage concerns)
       }
 
-      const res = await axios.put(`${url}/v1/department/update`, formData, {
-        headers: {
-          authtoken: authToken,
-          sessionid: session_id,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      // ── 2. Update department row ───────────────────────────────────────
+      const { error: updateError } = await supabase
+        .from("departments")
+        .update({
+          name: deptFormData.name.trim(),
+          desc: deptFormData.desc.trim(),
+          short_desc: deptFormData.short_desc.trim(),
+          fee: Number(deptFormData.fee) || 0,
+          cover_img: coverUrl,
+          // updated_at: new Date().toISOString(),   // if you have trigger → skip
+        })
+        .eq("department_id", department.department_id);
+
+      if (updateError) throw updateError;
 
       toast.dismiss();
-      toast.success("Department updated");
+      toast.success("Department updated successfully");
+
       setIsDeptModalOpen(false);
       setCoverPhoto(null);
       setRefreshKey((k) => k + 1);
     } catch (err) {
       toast.dismiss();
-      toast.error(err.response?.data?.error || "Update failed");
+      console.error(err);
+      toast.error(err.message || "Failed to update department");
     }
   };
 
@@ -872,6 +937,7 @@ export default function DepartmentDetail() {
                   }
                   placeholder="Department Name *"
                   required
+                  disabled
                 />
                 <textarea
                   value={deptFormData.desc}

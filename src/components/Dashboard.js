@@ -113,6 +113,25 @@ export default function Dashboard(props) {
             </span>
           </div>
         </div>
+
+
+          <div className="add-link">
+          <div className="tab" style={{ backgroundColor: "grey" }}>
+            <button
+              className="cat-popup page-big-headings"
+              style={{ backgroundColor: "grey", color: "white" }}
+              onClick={() => {
+                nav("/headers");
+                // console.log("hello");
+              }}
+            >
+              Manage Header Carousel
+            </button>
+            <span className="med-font" style={{ color: "white" }}>
+              Manage web main screen header Carousel
+            </span>
+          </div>
+        </div>
         {/* <div className="add-link">
           <div className="tab" style={{ backgroundColor: "grey" }}>
             <button
@@ -130,7 +149,7 @@ export default function Dashboard(props) {
             </span>
           </div>
         </div> */}
-        <div className="add-link">
+        {/* <div className="add-link">
           <div
             className="tab"
             style={{ backgroundColor: "rgba(61, 162, 218, .9)" }}
@@ -152,7 +171,7 @@ export default function Dashboard(props) {
               Orders from All Stores
             </span>
           </div>
-        </div>
+        </div> */}
       </div>
       {/* <div className="top">
         <div className="top-left-card">
