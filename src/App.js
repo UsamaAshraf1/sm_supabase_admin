@@ -43,6 +43,10 @@ import ServicePackage from "./components/ServicePackage";
 import AddServicePackage from "./components/AddServicePackage";
 
 import WebHeaders from "./components/WebHeaders";
+import Team from "./components/Team";
+import AddTeam from "./components/AddTeam";
+import Blogs from "./components/Blogs";
+import AddBlogs from "./components/AddBlog";
 
 function App() {
   // const [isTokenFound, setTokenFound] = useState(false);
@@ -95,6 +99,9 @@ function App() {
               path="Department"
               element={<Categories setName={setName} />}
             ></Route>
+
+            <Route path="Team" element={<Team setName={setName} />}></Route>
+            <Route path="Blogs" element={<Blogs setName={setName} />}></Route>
             <Route
               path="department_detail"
               element={<DepartmentDetail setName={setName} />}
@@ -220,6 +227,15 @@ function App() {
             <Route
               path="Department/add-department"
               element={<Addproduct storeId={storeId} />}
+            ></Route>
+
+            <Route
+              path="Team/add-team"
+              element={<AddTeam storeId={storeId} />}
+            ></Route>
+            <Route
+              path="Blogs/add-blog"
+              element={<AddBlogs storeId={storeId} />}
             ></Route>
             <Route
               path="services/add-service"

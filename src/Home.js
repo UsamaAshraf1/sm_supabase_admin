@@ -23,6 +23,8 @@ import dashboard from "./assets/dashboard.png";
 import logouticon from "./assets/Logout.png";
 import contactIcon from "./assets/contact.png";
 import departmentIcon from "./assets/department.png";
+import TeamIcon from "./assets/team_icon.png";
+import BlogsIcon from "./assets/blogs_icon.png";
 import doctorIcon from "./assets/doctor.png";
 import packages from "./assets/packages.png";
 import reloc from "./assets/reloc.png";
@@ -191,6 +193,32 @@ export default function Home(props) {
                       />
                     </div>
                     <span>Department</span>
+                  </NavLink>
+                </li>
+
+                  <li className={props.name === "Team" ? "focused" : ""}>
+                  <NavLink to="/Team" className="big-font">
+                    <div className="nav-icon">
+                      <img
+                        src={TeamIcon}
+                        alt="union-icon"
+                        className="icon"
+                      />
+                    </div>
+                    <span>Team</span>
+                  </NavLink>
+                </li>
+
+                  <li className={props.name === "Blogs" ? "focused" : ""}>
+                  <NavLink to="/Blogs" className="big-font">
+                    <div className="nav-icon">
+                      <img
+                        src={BlogsIcon}
+                        alt="union-icon"
+                        className="icon"
+                      />
+                    </div>
+                    <span>Blogs</span>
                   </NavLink>
                 </li>
                 {/* <li className={props.name === "doctors" ? "focused" : ""}>

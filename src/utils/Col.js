@@ -120,6 +120,75 @@ export const COLUMNS_CATEGORY = [
   // },
 ];
 
+export const COLUMNS_TEAMS = [
+  { Header: "NAME", accessor: "name" },
+  {
+    Header: "Desc",
+    accessor: "short_desc",
+    Cell: ({ value }) => {
+      if (value && value.length > 20) {
+        return `${value.slice(0, 20)}...`;
+      }
+      return value || ""; // Handle null/undefined values
+    },
+  },
+  { Header: "DESIGNATION", accessor: "designation" },
+  {
+    Header: "DATE & TIME",
+    accessor: "created_at",
+    Cell: ({ value }) => {
+      return format(new Date(value), "dd-MM-yyyy h:mm a");
+    },
+  },
+  // { Header: "TYPE", accessor: "type" },
+  // {
+  //   Header: "CATEGORY",
+  //   accessor: (row) => (row.cid ? row.cid : row.sub_cid),
+  //   Cell: (row) => {
+  //     // console.log(row);
+  //     return row.row.original.sub_cid
+  //       ? "Sub Child"
+  //       : row.row.original.child_cid
+  //       ? "Child"
+  //       : "Parent";
+  //   },
+  // },
+];
+
+export const COLUMNS_Blogs = [
+  { Header: "Title", accessor: "title" },
+  {
+    Header: "Desc",
+    accessor: "short_desc",
+    Cell: ({ value }) => {
+      if (value && value.length > 20) {
+        return `${value.slice(0, 20)}...`;
+      }
+      return value || ""; // Handle null/undefined values
+    },
+  },
+  {
+    Header: "DATE & TIME",
+    accessor: "created_at",
+    Cell: ({ value }) => {
+      return format(new Date(value), "dd-MM-yyyy h:mm a");
+    },
+  },
+  // { Header: "TYPE", accessor: "type" },
+  // {
+  //   Header: "CATEGORY",
+  //   accessor: (row) => (row.cid ? row.cid : row.sub_cid),
+  //   Cell: (row) => {
+  //     // console.log(row);
+  //     return row.row.original.sub_cid
+  //       ? "Sub Child"
+  //       : row.row.original.child_cid
+  //       ? "Child"
+  //       : "Parent";
+  //   },
+  // },
+];
+
 export const COLUMNS_Doctor = [
   { Header: "NAME", accessor: "name" },
   { Header: "Gender", accessor: "gender" },
