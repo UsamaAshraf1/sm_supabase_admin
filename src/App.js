@@ -45,8 +45,10 @@ import AddServicePackage from "./components/AddServicePackage";
 import WebHeaders from "./components/WebHeaders";
 import Team from "./components/Team";
 import AddTeam from "./components/AddTeam";
+import TeamDetail from "./components/TeamDetail";
 import Blogs from "./components/Blogs";
 import AddBlogs from "./components/AddBlog";
+import BlogsDetail from "./components/BlogsDetail";
 
 function App() {
   // const [isTokenFound, setTokenFound] = useState(false);
@@ -105,6 +107,14 @@ function App() {
             <Route
               path="department_detail"
               element={<DepartmentDetail setName={setName} />}
+            ></Route>
+            <Route
+              path="team_detail"
+              element={<TeamDetail setName={setName} />}
+            ></Route>
+             <Route
+              path="blog_detail"
+              element={<BlogsDetail setName={setName} />}
             ></Route>
             <Route
               path="doctors"

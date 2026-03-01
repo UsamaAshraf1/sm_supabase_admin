@@ -202,9 +202,9 @@ export default function Blogs({ setName }) {
                             (item) => item.id === row.values.id,
                           );
                           setPreviousData(data);
-                        //   nav(`/department_detail`, {
-                        //     state: { department: row.original },
-                        //   });
+                          nav(`/blog_detail`, {
+                            state: { blog: row.original },
+                          });
                         }}
                         style={{ cursor: "pointer" }}
                       >

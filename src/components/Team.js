@@ -202,9 +202,9 @@ export default function Team({ setName }) {
                             (item) => item.id === row.values.id,
                           );
                           setPreviousData(data);
-                        //   nav(`/department_detail`, {
-                        //     state: { department: row.original },
-                        //   });
+                          nav(`/team_detail`, {
+                            state: { team: row.original },
+                          });
                         }}
                         style={{ cursor: "pointer" }}
                       >
