@@ -4,7 +4,7 @@ import imageicon from "../assets/Imageicon.png";
 import backicon from "../assets/back.png";
 import { toast, ToastContainer } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
-import supabase from "../utils/supabaseConfig.js"; // your client
+import supabase from "../utils/supabaseConfig.js";
 
 export default function AddDepartment(props) {
   const navigate = useNavigate();
@@ -17,39 +17,64 @@ export default function AddDepartment(props) {
   const [department, setDepartment] = useState({
     name: previousData?.name || "",
     des: previousData?.des || "",
-    shortDes: previousData?.short_des || "", // match snake_case if needed
+    shortDes: previousData?.short_des || "",
     fee: previousData?.fee || "",
     cover: previousData?.cover_img || "",
+    sort_number: previousData?.sort_number || "", // new field
   });
 
-  const [currentQ, setCurrentQ] = useState("");
-  const [currentA, setCurrentA] = useState("");
   const [coverPhoto, setCoverPhoto] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [sortNumberError, setSortNumberError] = useState("");
 
   const isUpdate = !!previousData?.id;
 
   const handleDepartmentChange = (e) => {
     const { name, value } = e.target;
     setDepartment((prev) => ({ ...prev, [name]: value }));
+
+    // Clear error when user starts typing again
+    if (name === "sort_number") {
+      setSortNumberError("");
+    }
   };
 
-  const addFaq = () => {
-    if (!currentQ.trim() || !currentA.trim()) {
-      toast.error("Please enter both question and answer");
+  // Check if sort_number already exists (skip current record when editing)
+  const checkSortNumberExists = async (value) => {
+    if (!value || isNaN(value)) {
+      setSortNumberError("");
       return;
     }
-    setDepartment((prev) => ({
-      ...prev,
-    }));
-    setCurrentQ("");
-    setCurrentA("");
-  };
 
-  const removeFaq = (index) => {
-    setDepartment((prev) => ({
-      ...prev,
-    }));
+    const num = parseInt(value, 10);
+
+    try {
+      let query = supabase
+        .from("departments")
+        .select("id")
+        .eq("sort_number", num);
+
+      // When editing → exclude current record
+      if (isUpdate && previousData?.id) {
+        query = query.neq("id", previousData.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Sort number check failed:", error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setSortNumberError(`Sort number ${num} is already in use by another department`);
+      } else {
+        setSortNumberError("");
+      }
+    } catch (err) {
+      console.error(err);
+      setSortNumberError("Error checking sort number availability");
+    }
   };
 
   const handleFileChange = (e) => {
@@ -66,35 +91,48 @@ export default function AddDepartment(props) {
       shortDes: "",
       fee: "",
       cover: "",
+      sort_number: "",
     });
     setCoverPhoto(null);
-    setCurrentQ("");
-    setCurrentA("");
+    setSortNumberError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (uploading) return;
 
+    // Required fields validation
     if (!department.name || !department.des || !department.shortDes) {
       toast.error("Please fill required fields (Name, Description, Short Description)");
       return;
     }
 
+    // Sort number validation
+    if (department.sort_number !== "" && sortNumberError) {
+      toast.error("Please fix the sort number error before submitting");
+      return;
+    }
+
+    // Optional: enforce sort_number must be filled (uncomment if required)
+    // if (department.sort_number === "") {
+    //   toast.error("Sort Number is required");
+    //   return;
+    // }
+
     setUploading(true);
-    toast("Processing...", { type: "info" });
+    toast.info("Processing...");
 
     try {
-      let coverUrl = department.cover_img; // keep old url if no new file
+      let coverUrl = previousData?.cover_img || null;
 
       // 1. Upload new cover photo if selected
       if (coverPhoto) {
         const fileExt = coverPhoto.name.split(".").pop().toLowerCase();
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-        const filePath = `${fileName}`; // optional folder
+        const filePath = `${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("Departments") // ← change to your bucket name
+          .from("Departments")
           .upload(filePath, coverPhoto, {
             cacheControl: "3600",
             upsert: false,
@@ -102,30 +140,29 @@ export default function AddDepartment(props) {
 
         if (uploadError) throw uploadError;
 
-        const { data } = supabase.storage
+        const { data: urlData } = supabase.storage
           .from("Departments")
           .getPublicUrl(filePath);
 
-
-        coverUrl = data.publicUrl;
+        coverUrl = urlData?.publicUrl;
 
         if (!coverUrl) throw new Error("Failed to get public URL");
       }
 
-      // 2. Prepare data (match your column names)
+      // 2. Prepare payload
       const payload = {
         name: department.name,
         desc: department.des,
         short_desc: department.shortDes,
         fee: parseFloat(department.fee) || 0,
+        sort_number: department.sort_number ? parseInt(department.sort_number, 10) : null,
         status: "Active",
-        cover_img: coverUrl || null,
+        cover_img: coverUrl,
       };
 
       let error;
 
       if (isUpdate) {
-        // UPDATE
         ({ error } = await supabase
           .from("departments")
           .update(payload)
@@ -133,7 +170,6 @@ export default function AddDepartment(props) {
           .select()
           .single());
       } else {
-        // INSERT
         ({ error } = await supabase
           .from("departments")
           .insert(payload)
@@ -155,7 +191,6 @@ export default function AddDepartment(props) {
     }
   };
 
-  // Optional: fix preview if editing
   const previewSrc =
     coverPhoto
       ? URL.createObjectURL(coverPhoto)
@@ -205,6 +240,7 @@ export default function AddDepartment(props) {
                 onChange={handleDepartmentChange}
                 disabled={uploading}
               />
+
               <input
                 required
                 type="text"
@@ -215,6 +251,7 @@ export default function AddDepartment(props) {
                 onChange={handleDepartmentChange}
                 disabled={uploading}
               />
+
               <input
                 required
                 type="text"
@@ -225,7 +262,7 @@ export default function AddDepartment(props) {
                 onChange={handleDepartmentChange}
                 disabled={uploading}
               />
-             
+
               <input
                 type="number"
                 name="fee"
@@ -236,7 +273,24 @@ export default function AddDepartment(props) {
                 disabled={uploading}
               />
 
-            
+              {/* ─── New Sort Number Field ─── */}
+              <div className="field-wrapper">
+                <input
+                  type="number"
+                  name="sort_number"
+                  placeholder="Sort Number (order on website)"
+                  className={`field ${sortNumberError ? "field-error" : ""}`}
+                  value={department.sort_number}
+                  onChange={handleDepartmentChange}
+                  onBlur={(e) => checkSortNumberExists(e.target.value)}
+                  disabled={uploading}
+                  min="1"
+                  step="1"
+                />
+                {sortNumberError && (
+                  <div className="error-text">{sortNumberError}</div>
+                )}
+              </div>
             </div>
 
             <div className="form-image">

@@ -35,23 +35,23 @@ export default function DepartmentDetail() {
     short_desc: "",
     fee: "",
     cover: "",
+    sort_number: "",           // ← added
   });
   const [coverPhoto, setCoverPhoto] = useState(null);
 
   // Service modals + state
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
   const [isEditServiceModalOpen, setIsEditServiceModalOpen] = useState(false);
-  const [isDeleteServiceModalOpen, setIsDeleteServiceModalOpen] =
-    useState(false);
+  const [isDeleteServiceModalOpen, setIsDeleteServiceModalOpen] = useState(false);
   const [newServiceDesc, setNewServiceDesc] = useState("");
   const [editService, setEditService] = useState({ id: null, des: "" });
   const [deleteServiceId, setDeleteServiceId] = useState(null);
 
-  // FAQ modal states (you can expand to full modal if needed)
+  // FAQ modal states
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [currentAnswer, setCurrentAnswer] = useState("");
 
-  // Why Choose Us (simple for now - can be turned into modal later)
+  // Why Choose Us
   const [newWhyChoose, setNewWhyChoose] = useState("");
 
   const [isDeleteDeptModalOpen, setIsDeleteDeptModalOpen] = useState(false);
@@ -59,9 +59,6 @@ export default function DepartmentDetail() {
   // Refresh trigger
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // ────────────────────────────────────────────────
-  // Fetch main department + children
-  // ────────────────────────────────────────────────
   useEffect(() => {
     if (!initialDepartment?.name) {
       setError("No department selected");
@@ -89,6 +86,7 @@ export default function DepartmentDetail() {
           short_desc: dept.short_desc || "",
           fee: dept.fee || "",
           cover: dept.cover_img || "",
+          sort_number: dept.sort_number ?? "",   // ← added
         });
 
         // 2. Children in parallel
@@ -125,93 +123,49 @@ export default function DepartmentDetail() {
     fetchData();
   }, [initialDepartment?.name, refreshKey]);
 
-  // ────────────────────────────────────────────────
-  // Department Update (still using your API)
-  // ────────────────────────────────────────────────
-  // const handleSaveDepartment = async () => {
-  //   if (!department?.id) return;
-
-  //   toast("Updating department...", { autoClose: false });
-
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append("id", department.id);
-  //     formData.append("name", deptFormData.name);
-  //     formData.append("desc", deptFormData.desc); // ← aligned name
-  //     formData.append("short_desc", deptFormData.short_desc);
-  //     formData.append("fee", Number(deptFormData.fee) || 0);
-
-  //     if (coverPhoto) {
-  //       formData.append("cover", coverPhoto);
-  //     }
-
-  //     const res = await axios.put(`${url}/v1/department/update`, formData, {
-  //       headers: {
-  //         authtoken: authToken,
-  //         sessionid: session_id,
-  //         "Content-Type": "multipart/form-data",
-  //       },
-  //     });
-
-  //     toast.dismiss();
-  //     toast.success("Department updated");
-  //     setIsDeptModalOpen(false);
-  //     setCoverPhoto(null);
-  //     setRefreshKey((k) => k + 1);
-  //   } catch (err) {
-  //     toast.dismiss();
-  //     toast.error(err.response?.data?.error || "Update failed");
-  //   }
-  // };
-
   const handleSaveDepartment = async () => {
     if (!department?.department_id) return;
 
     toast("Updating department...", { autoClose: false });
 
     try {
-      let coverUrl = department.cover_img; // keep old url by default
+      let coverUrl = department.cover_img;
 
-      // ── 1. Upload new image if selected ────────────────────────────────
       if (coverPhoto) {
-        const fileExt =
-          coverPhoto.name.split(".").pop()?.toLowerCase() || "jpg";
+        const fileExt = coverPhoto.name.split(".").pop()?.toLowerCase() || "jpg";
         const fileName = `${department.department_id}-${Date.now()}.${fileExt}`;
-        const filePath = `${fileName}`; // organize in folder
+        const filePath = `${fileName}`;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("Departments") // ← change to your bucket name
+        const { error: uploadError } = await supabase.storage
+          .from("Departments")
           .upload(filePath, coverPhoto, {
             cacheControl: "3600",
-            upsert: false, // or true if you want to overwrite same path
+            upsert: false,
           });
 
-        if (uploadError) {
-          throw new Error(`Image upload failed: ${uploadError.message}`);
-        }
+        if (uploadError) throw uploadError;
 
-        // Get public URL
         const { data: publicUrlData } = supabase.storage
           .from("Departments")
           .getPublicUrl(filePath);
 
         coverUrl = publicUrlData.publicUrl;
-
-        // Optional: you could also remove old image here if you want
-        // (but usually better to keep old ones unless you have storage concerns)
       }
 
-      // ── 2. Update department row ───────────────────────────────────────
+      const updatePayload = {
+        name: deptFormData.name.trim(),
+        desc: deptFormData.desc.trim(),
+        short_desc: deptFormData.short_desc.trim(),
+        fee: Number(deptFormData.fee) || 0,
+        cover_img: coverUrl,
+        sort_number: deptFormData.sort_number 
+          ? parseInt(deptFormData.sort_number, 10) 
+          : null,   // ← added
+      };
+
       const { error: updateError } = await supabase
         .from("departments")
-        .update({
-          name: deptFormData.name.trim(),
-          desc: deptFormData.desc.trim(),
-          short_desc: deptFormData.short_desc.trim(),
-          fee: Number(deptFormData.fee) || 0,
-          cover_img: coverUrl,
-          // updated_at: new Date().toISOString(),   // if you have trigger → skip
-        })
+        .update(updatePayload)
         .eq("department_id", department.department_id);
 
       if (updateError) throw updateError;
@@ -243,7 +197,6 @@ export default function DepartmentDetail() {
     toast("Deleting department...", { autoClose: false });
 
     try {
-      // Optional: delete children first (safer, especially if no CASCADE)
       await Promise.all([
         supabase
           .from("departments_services")
@@ -259,7 +212,6 @@ export default function DepartmentDetail() {
           .eq("department_id", department.department_id),
       ]);
 
-      // Now delete the main department
       const { error } = await supabase
         .from("departments")
         .delete()
@@ -270,7 +222,6 @@ export default function DepartmentDetail() {
       toast.dismiss();
       toast.success("Department deleted successfully");
 
-      // Redirect back to list
       navigate("/department");
     } catch (err) {
       toast.dismiss();
@@ -278,9 +229,7 @@ export default function DepartmentDetail() {
       toast.error(err.message || "Failed to delete department");
     }
   };
-  // ────────────────────────────────────────────────
-  // Services CRUD
-  // ────────────────────────────────────────────────
+
   const handleAddService = async () => {
     if (!newServiceDesc.trim() || !department?.department_id) return;
 
@@ -338,9 +287,6 @@ export default function DepartmentDetail() {
     setRefreshKey((k) => k + 1);
   };
 
-  // ────────────────────────────────────────────────
-  // FAQs CRUD (simple inline for now - can be modal-ized)
-  // ────────────────────────────────────────────────
   const addFaq = async () => {
     if (
       !currentQuestion.trim() ||
@@ -382,9 +328,6 @@ export default function DepartmentDetail() {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Why Choose Us CRUD (simple version)
-  // ────────────────────────────────────────────────
   const addWhyChoose = async () => {
     if (!newWhyChoose.trim() || !department?.department_id) return;
 
@@ -417,9 +360,6 @@ export default function DepartmentDetail() {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Render
-  // ────────────────────────────────────────────────
   if (loading) return <div className="page">Loading...</div>;
   if (error || !department)
     return <div className="page">Error: {error || "Department not found"}</div>;
@@ -427,7 +367,6 @@ export default function DepartmentDetail() {
   return (
     <div className="page">
       <div className="content">
-        {/* Header + Back + Delete */}
         <div
           style={{
             display: "flex",
@@ -479,7 +418,6 @@ export default function DepartmentDetail() {
           </div>
         </div>
 
-        {/* Main Info Card */}
         <div
           style={{
             background: "white",
@@ -537,15 +475,16 @@ export default function DepartmentDetail() {
                 <p style={{ marginTop: 12 }}>
                   <strong>Fee:</strong> {department.fee ?? "—"}
                 </p>
-
                 <p style={{ marginTop: 12 }}>
                   <strong>Status:</strong> {department.status || "—"}
+                </p>
+                <p style={{ marginTop: 12 }}>
+                  <strong>Sort Number:</strong> {department.sort_number || "—"}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Why Choose Us */}
           <section style={{ marginTop: 40 }}>
             <h3 style={{ marginBottom: 16 }}>Why Choose Us</h3>
             {whyChoose.length === 0 ? (
@@ -606,7 +545,6 @@ export default function DepartmentDetail() {
 
           <hr style={{ margin: "32px 0", borderColor: "#E5E7EB" }} />
 
-          {/* Services */}
           <section>
             <div
               style={{
@@ -680,7 +618,6 @@ export default function DepartmentDetail() {
 
           <hr style={{ margin: "32px 0", borderColor: "#E5E7EB" }} />
 
-          {/* FAQs */}
           <section>
             <h3 style={{ marginBottom: 16 }}>FAQs</h3>
 
@@ -760,162 +697,7 @@ export default function DepartmentDetail() {
           </section>
         </div>
 
-        {/* ── Modals ─────────────────────────────────────── */}
-
-        {/* {isDeptModalOpen && (
-          <div className="modal-overlay">
-            <div className="modal">
-              <h2>Edit Department</h2>
-              <input
-                value={deptFormData.name}
-                onChange={(e) =>
-                  setDeptFormData({ ...deptFormData, name: e.target.value })
-                }
-                placeholder="Name"
-              />
-              <textarea
-                value={deptFormData.desc}
-                onChange={(e) =>
-                  setDeptFormData({ ...deptFormData, desc: e.target.value })
-                }
-                placeholder="Description"
-              />
-              <input
-                value={deptFormData.short_desc}
-                onChange={(e) =>
-                  setDeptFormData({
-                    ...deptFormData,
-                    short_desc: e.target.value,
-                  })
-                }
-                placeholder="Short Description"
-              />
-              <input
-                type="number"
-                value={deptFormData.fee}
-                onChange={(e) =>
-                  setDeptFormData({ ...deptFormData, fee: e.target.value })
-                }
-                placeholder="Fee"
-              />
-
-              <div style={{ margin: "16px 0" }}>
-                <label>Cover Image</label>
-                <input
-                  type="file"
-                  onChange={(e) => setCoverPhoto(e.target.files[0])}
-                  accept="image/*"
-                />
-                {coverPhoto && <p>Selected: {coverPhoto.name}</p>}
-              </div>
-
-              <div
-                style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}
-              >
-                <button onClick={() => setIsDeptModalOpen(false)}>
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveDepartment}
-                  style={{ background: "#8B5CF6", color: "white" }}
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {isAddServiceModalOpen && (
-            <div className="modal">
-              <h2>Add Service</h2>
-              <textarea
-                value={newServiceDesc}
-                onChange={(e) => setNewServiceDesc(e.target.value)}
-                placeholder="Service description"
-                rows={4}
-              />
-              <div
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  justifyContent: "flex-end",
-                  marginTop: 20,
-                }}
-              >
-                <button onClick={() => setIsAddServiceModalOpen(false)}>
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddService}
-                  style={{ background: "#10B981", color: "white" }}
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-        )}
-
-        {isEditServiceModalOpen && (
-          <div className="modal-overlay">
-            <div className="modal">
-              <h2>Edit Service</h2>
-              <textarea
-                value={editService.des}
-                onChange={(e) =>
-                  setEditService({ ...editService, des: e.target.value })
-                }
-                rows={4}
-              />
-              <div
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  justifyContent: "flex-end",
-                  marginTop: 20,
-                }}
-              >
-                <button onClick={() => setIsEditServiceModalOpen(false)}>
-                  Cancel
-                </button>
-                <button
-                  onClick={handleUpdateService}
-                  style={{ background: "#8B5CF6", color: "white" }}
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {isDeleteServiceModalOpen && (
-          <div className="modal-overlay">
-            <div className="modal" style={{ maxWidth: 400 }}>
-              <h2>Confirm Delete</h2>
-              <p>Are you sure you want to delete this service?</p>
-              <div
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  justifyContent: "flex-end",
-                  marginTop: 24,
-                }}
-              >
-                <button onClick={() => setIsDeleteServiceModalOpen(false)}>
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteService}
-                  style={{ background: "#EF4444", color: "white" }}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        )} */}
-
+        {/* ── Edit Department Modal ── */}
         {isDeptModalOpen && (
           <div className="modal-overlay">
             <div className="modal-content">
@@ -967,7 +749,49 @@ export default function DepartmentDetail() {
                   min="0"
                 />
 
-                <div className="cover-upload">
+                {/* Sort Number Field */}
+                <div style={{ marginTop: "20px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Sort Number (display order)
+                  </label>
+                  <input
+                    type="number"
+                    value={deptFormData.sort_number}
+                    onChange={(e) =>
+                      setDeptFormData({
+                        ...deptFormData,
+                        sort_number: e.target.value,
+                      })
+                    }
+                    placeholder="Enter sort number (lower = appears first)"
+                    min="1"
+                    step="1"
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                    }}
+                  />
+                  <small
+                    style={{
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                      display: "block",
+                      marginTop: "4px",
+                    }}
+                  >
+                    Departments with lower numbers appear first in the list
+                  </small>
+                </div>
+
+                <div className="cover-upload" style={{ marginTop: "24px" }}>
                   <label>Cover Image</label>
                   <input
                     type="file"
@@ -998,6 +822,7 @@ export default function DepartmentDetail() {
           </div>
         )}
 
+        {/* Other modals remain unchanged */}
         {isAddServiceModalOpen && (
           <div className="modal-overlay">
             <div className="modal-content" style={{ maxWidth: "480px" }}>
@@ -1151,149 +976,148 @@ export default function DepartmentDetail() {
 
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* Basic modal styling */}
       <style>{`
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1200;
-    padding: 20px;
-    backdrop-filter: blur(4px);
-  }
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.55);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1200;
+          padding: 20px;
+          backdrop-filter: blur(4px);
+        }
 
-  .modal-content {
-    background: white;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 560px;
-    max-height: 92vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
-    border: 1px solid #e5e7eb;
-  }
+        .modal-content {
+          background: white;
+          border-radius: 12px;
+          width: 100%;
+          max-width: 560px;
+          max-height: 92vh;
+          overflow-y: auto;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+          border: 1px solid #e5e7eb;
+        }
 
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e5e7eb;
-  }
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 24px;
+          border-bottom: 1px solid #e5e7eb;
+        }
 
-  .modal-header h2 {
-    margin: 0;
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: #1f2937;
-  }
+        .modal-header h2 {
+          margin: 0;
+          font-size: 1.4rem;
+          font-weight: 600;
+          color: #1f2937;
+        }
 
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 1.8rem;
-    color: #6b7280;
-    cursor: pointer;
-    padding: 4px 8px;
-    line-height: 1;
-  }
+        .close-btn {
+          background: none;
+          border: none;
+          font-size: 1.8rem;
+          color: #6b7280;
+          cursor: pointer;
+          padding: 4px 8px;
+          line-height: 1;
+        }
 
-  .close-btn:hover {
-    color: #374151;
-  }
+        .close-btn:hover {
+          color: #374151;
+        }
 
-  .modal-body {
-    padding: 24px;
-  }
+        .modal-body {
+          padding: 24px;
+        }
 
-  .modal-body input,
-  .modal-body textarea {
-    width: 100%;
-    padding: 12px 14px;
-    margin-bottom: 18px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 15px;
-    background: #f9fafb;
-    transition: border-color 0.2s;
-  }
+        .modal-body input,
+        .modal-body textarea {
+          width: 100%;
+          padding: 12px 14px;
+          margin-bottom: 18px;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 15px;
+          background: #f9fafb;
+          transition: border-color 0.2s;
+        }
 
-  .modal-body input:focus,
-  .modal-body textarea:focus {
-    outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  }
+        .modal-body input:focus,
+        .modal-body textarea:focus {
+          outline: none;
+          border-color: #8b5cf6;
+          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
 
-  .cover-upload label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: #374151;
-  }
+        .cover-upload label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 500;
+          color: #374151;
+        }
 
-  .file-name {
-    margin-top: 8px;
-    color: #059669;
-    font-size: 0.9rem;
-  }
+        .file-name {
+          margin-top: 8px;
+          color: #059669;
+          font-size: 0.9rem;
+        }
 
-  .current-image {
-    margin-top: 8px;
-    color: #6b7280;
-    font-size: 0.9rem;
-  }
+        .current-image {
+          margin-top: 8px;
+          color: #6b7280;
+          font-size: 0.9rem;
+        }
 
-  .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding: 16px 24px;
-    border-top: 1px solid #e5e7eb;
-  }
+        .modal-footer {
+          display: flex;
+          justify-content: flex-end;
+          gap: 12px;
+          padding: 16px 24px;
+          border-top: 1px solid #e5e7eb;
+        }
 
-  .btn-cancel,
-  .btn-save,
-  .btn-delete {
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    font-size: 14px;
-  }
+        .btn-cancel,
+        .btn-save,
+        .btn-delete {
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-weight: 500;
+          cursor: pointer;
+          border: none;
+          font-size: 14px;
+        }
 
-  .btn-cancel {
-    background: white;
-    border: 1px solid #d1d5db;
-    color: #4b5563;
-  }
+        .btn-cancel {
+          background: white;
+          border: 1px solid #d1d5db;
+          color: #4b5563;
+        }
 
-  .btn-cancel:hover {
-    background: #f3f4f6;
-  }
+        .btn-cancel:hover {
+          background: #f3f4f6;
+        }
 
-  .btn-save {
-    background: #8b5cf6;
-    color: white;
-  }
+        .btn-save {
+          background: #8b5cf6;
+          color: white;
+        }
 
-  .btn-save:hover {
-    background: #7c3aed;
-  }
+        .btn-save:hover {
+          background: #7c3aed;
+        }
 
-  .btn-delete {
-    background: #ef4444;
-    color: white;
-  }
+        .btn-delete {
+          background: #ef4444;
+          color: white;
+        }
 
-  .btn-delete:hover {
-    background: #dc2626;
-  }
-`}</style>
+        .btn-delete:hover {
+          background: #dc2626;
+        }
+      `}</style>
     </div>
   );
 }

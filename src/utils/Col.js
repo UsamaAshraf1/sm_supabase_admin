@@ -98,6 +98,7 @@ export const COLUMNS_CATEGORY = [
     },
   },
   { Header: "STATUS", accessor: "status" },
+  { Header: "SORT NUMBER", accessor: "sort_number" },
   {
     Header: "DATE & TIME",
     accessor: "created_at",
