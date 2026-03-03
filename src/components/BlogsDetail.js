@@ -89,7 +89,8 @@ export default function BlogsDetail() {
             upsert: false,
           });
 
-        if (uploadError) throw new Error(`Image upload failed: ${uploadError.message}`);
+        if (uploadError)
+          throw new Error(`Image upload failed: ${uploadError.message}`);
 
         const { data: urlData } = supabase.storage
           .from("Blogs")
@@ -126,7 +127,9 @@ export default function BlogsDetail() {
   const handleDelete = async () => {
     if (!blog?.id) return;
 
-    if (!window.confirm(`Delete blog "${blog.title}"? This cannot be undone.`)) {
+    if (
+      !window.confirm(`Delete blog "${blog.title}"? This cannot be undone.`)
+    ) {
       return;
     }
 
@@ -182,7 +185,11 @@ export default function BlogsDetail() {
               onClick={() => navigate("/blogs")} // ← adjust route if needed
               style={{ background: "none", border: "none" }}
             >
-              <img src={backicon} alt="Back" style={{ width: 28, height: 28 }} />
+              <img
+                src={backicon}
+                alt="Back"
+                style={{ width: 28, height: 28 }}
+              />
             </button>
             <h1 style={{ margin: 0, fontSize: 28 }}>Blog Details</h1>
           </div>
@@ -224,12 +231,24 @@ export default function BlogsDetail() {
             boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
           }}
         >
-          <div style={{ display: "flex", gap: 24, alignItems: "flex-start", marginBottom: 32 }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 24,
+              alignItems: "flex-start",
+              marginBottom: 32,
+            }}
+          >
             {blog.img ? (
               <img
                 src={blog.img}
                 alt={blog.title}
-                style={{ width: 300, height: 200, objectFit: "cover", borderRadius: 12 }}
+                style={{
+                  width: 300,
+                  height: 200,
+                  objectFit: "cover",
+                  borderRadius: 12,
+                }}
               />
             ) : (
               <div
@@ -249,14 +268,18 @@ export default function BlogsDetail() {
             )}
 
             <div style={{ flex: 1 }}>
-              <h2 style={{ margin: "0 0 12px 0", fontSize: 28 }}>{blog.title}</h2>
+              <h2 style={{ margin: "0 0 12px 0", fontSize: 28 }}>
+                {blog.title}
+              </h2>
               <div style={{ color: "#4B5563", lineHeight: 1.7 }}>
                 <p>
-                  <strong>Short Description:</strong><br />
+                  <strong>Short Description:</strong>
+                  <br />
                   {blog.short_desc || "—"}
                 </p>
                 <p style={{ marginTop: 16 }}>
-                  <strong>Content:</strong><br />
+                  <strong>Content:</strong>
+                  <br />
                   {blog.des || "—"}
                 </p>
               </div>
@@ -270,32 +293,74 @@ export default function BlogsDetail() {
             <div className="modal-content">
               <div className="modal-header">
                 <h2>Edit Blog</h2>
-                <button className="close-btn" onClick={() => setIsEditModalOpen(false)}>
+                <button
+                  className="close-btn"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
                   ×
                 </button>
               </div>
 
               <div className="modal-body">
-                <input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Blog Title *"
-                  required
-                  disabled
-                  
-                />
-                <textarea
-                  value={formData.short_desc}
-                  onChange={(e) => setFormData({ ...formData, short_desc: e.target.value })}
-                  placeholder="Short description / excerpt"
-                  rows={3}
-                />
-                <textarea
-                  value={formData.des}
-                  onChange={(e) => setFormData({ ...formData, des: e.target.value })}
-                  placeholder="Full blog content"
-                  rows={8}
-                />
+                <div>
+                   <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Title
+                  </label>
+                  <input
+                    value={formData.title}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
+                    placeholder="Blog Title *"
+                    required
+                    disabled
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Short Desc
+                  </label>
+                  <textarea
+                    value={formData.short_desc}
+                    onChange={(e) =>
+                      setFormData({ ...formData, short_desc: e.target.value })
+                    }
+                    placeholder="Short description / excerpt"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Content
+                  </label>
+                  <textarea
+                    value={formData.des}
+                    onChange={(e) =>
+                      setFormData({ ...formData, des: e.target.value })
+                    }
+                    placeholder="Full blog content"
+                    rows={8}
+                  />
+                </div>
 
                 <div className="cover-upload">
                   <label>Featured Image</label>
@@ -304,7 +369,9 @@ export default function BlogsDetail() {
                     onChange={(e) => setNewImage(e.target.files?.[0] || null)}
                     accept="image/*"
                   />
-                  {newImage && <p className="file-name">Selected: {newImage.name}</p>}
+                  {newImage && (
+                    <p className="file-name">Selected: {newImage.name}</p>
+                  )}
                   {!newImage && blog.img && (
                     <p className="current-image">Current image exists</p>
                   )}
@@ -312,7 +379,10 @@ export default function BlogsDetail() {
               </div>
 
               <div className="modal-footer">
-                <button className="btn-cancel" onClick={() => setIsEditModalOpen(false)}>
+                <button
+                  className="btn-cancel"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
                   Cancel
                 </button>
                 <button className="btn-save" onClick={handleSave}>
@@ -329,21 +399,28 @@ export default function BlogsDetail() {
             <div className="modal-content" style={{ maxWidth: "420px" }}>
               <div className="modal-header">
                 <h2>Delete Blog</h2>
-                <button className="close-btn" onClick={() => setIsDeleteModalOpen(false)}>
+                <button
+                  className="close-btn"
+                  onClick={() => setIsDeleteModalOpen(false)}
+                >
                   ×
                 </button>
               </div>
 
               <div className="modal-body">
                 <p style={{ fontSize: "16px", color: "#374151" }}>
-                  Are you sure you want to delete<br />
+                  Are you sure you want to delete
+                  <br />
                   <strong>"{blog?.title}"</strong>?<br />
                   This action cannot be undone.
                 </p>
               </div>
 
               <div className="modal-footer">
-                <button className="btn-cancel" onClick={() => setIsDeleteModalOpen(false)}>
+                <button
+                  className="btn-cancel"
+                  onClick={() => setIsDeleteModalOpen(false)}
+                >
                   Cancel
                 </button>
                 <button className="btn-delete" onClick={handleDelete}>

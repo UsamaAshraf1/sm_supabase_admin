@@ -35,14 +35,15 @@ export default function DepartmentDetail() {
     short_desc: "",
     fee: "",
     cover: "",
-    sort_number: "",           // ← added
+    sort_number: "", // ← added
   });
   const [coverPhoto, setCoverPhoto] = useState(null);
 
   // Service modals + state
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
   const [isEditServiceModalOpen, setIsEditServiceModalOpen] = useState(false);
-  const [isDeleteServiceModalOpen, setIsDeleteServiceModalOpen] = useState(false);
+  const [isDeleteServiceModalOpen, setIsDeleteServiceModalOpen] =
+    useState(false);
   const [newServiceDesc, setNewServiceDesc] = useState("");
   const [editService, setEditService] = useState({ id: null, des: "" });
   const [deleteServiceId, setDeleteServiceId] = useState(null);
@@ -86,7 +87,7 @@ export default function DepartmentDetail() {
           short_desc: dept.short_desc || "",
           fee: dept.fee || "",
           cover: dept.cover_img || "",
-          sort_number: dept.sort_number ?? "",   // ← added
+          sort_number: dept.sort_number ?? "", // ← added
         });
 
         // 2. Children in parallel
@@ -132,7 +133,8 @@ export default function DepartmentDetail() {
       let coverUrl = department.cover_img;
 
       if (coverPhoto) {
-        const fileExt = coverPhoto.name.split(".").pop()?.toLowerCase() || "jpg";
+        const fileExt =
+          coverPhoto.name.split(".").pop()?.toLowerCase() || "jpg";
         const fileName = `${department.department_id}-${Date.now()}.${fileExt}`;
         const filePath = `${fileName}`;
 
@@ -158,9 +160,9 @@ export default function DepartmentDetail() {
         short_desc: deptFormData.short_desc.trim(),
         fee: Number(deptFormData.fee) || 0,
         cover_img: coverUrl,
-        sort_number: deptFormData.sort_number 
-          ? parseInt(deptFormData.sort_number, 10) 
-          : null,   // ← added
+        sort_number: deptFormData.sort_number
+          ? parseInt(deptFormData.sort_number, 10)
+          : null, // ← added
       };
 
       const { error: updateError } = await supabase
@@ -712,42 +714,88 @@ export default function DepartmentDetail() {
               </div>
 
               <div className="modal-body">
-                <input
-                  value={deptFormData.name}
-                  onChange={(e) =>
-                    setDeptFormData({ ...deptFormData, name: e.target.value })
-                  }
-                  placeholder="Department Name *"
-                  required
-                  disabled
-                />
-                <textarea
-                  value={deptFormData.desc}
-                  onChange={(e) =>
-                    setDeptFormData({ ...deptFormData, desc: e.target.value })
-                  }
-                  placeholder="Full Description"
-                  rows={4}
-                />
-                <input
-                  value={deptFormData.short_desc}
-                  onChange={(e) =>
-                    setDeptFormData({
-                      ...deptFormData,
-                      short_desc: e.target.value,
-                    })
-                  }
-                  placeholder="Short Description"
-                />
-                <input
-                  type="number"
-                  value={deptFormData.fee}
-                  onChange={(e) =>
-                    setDeptFormData({ ...deptFormData, fee: e.target.value })
-                  }
-                  placeholder="Fee (optional)"
-                  min="0"
-                />
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Name
+                  </label>
+                  <input
+                    value={deptFormData.name}
+                    onChange={(e) =>
+                      setDeptFormData({ ...deptFormData, name: e.target.value })
+                    }
+                    placeholder="Department Name *"
+                    required
+                    disabled
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Desc
+                  </label>
+                  <textarea
+                    value={deptFormData.desc}
+                    onChange={(e) =>
+                      setDeptFormData({ ...deptFormData, desc: e.target.value })
+                    }
+                    placeholder="Full Description"
+                    rows={4}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Short Desc
+                  </label>
+                  <textarea
+                    value={deptFormData.short_desc}
+                    onChange={(e) =>
+                      setDeptFormData({
+                        ...deptFormData,
+                        short_desc: e.target.value,
+                      })
+                    }
+                    placeholder="Short Description"
+                     rows={6}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Fee
+                  </label>
+                  <input
+                    type="number"
+                    value={deptFormData.fee}
+                    onChange={(e) =>
+                      setDeptFormData({ ...deptFormData, fee: e.target.value })
+                    }
+                    placeholder="Fee (optional)"
+                    min="0"
+                  />
+                </div>
 
                 {/* Sort Number Field */}
                 <div style={{ marginTop: "20px" }}>
@@ -758,7 +806,7 @@ export default function DepartmentDetail() {
                       fontWeight: 500,
                     }}
                   >
-                    Sort Number (display order)
+                    Sort Number
                   </label>
                   <input
                     type="number"

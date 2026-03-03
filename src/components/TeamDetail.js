@@ -303,30 +303,65 @@ export default function TeamDetail() {
               </div>
 
               <div className="modal-body">
-                <input
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="Full Name *"
-                  required
-                  disabled // ← remove if name should be editable
-                />
-                <input
-                  value={formData.designation}
-                  onChange={(e) =>
-                    setFormData({ ...formData, designation: e.target.value })
-                  }
-                  placeholder="Designation / Role"
-                />
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Name
+                  </label>
+                  <input
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    placeholder="Full Name *"
+                    required
+                    disabled // ← remove if name should be editable
+                  />
+                </div>
 
-                <input
-                  value={formData.short_desc}
-                  onChange={(e) =>
-                    setFormData({ ...formData, short_desc: e.target.value })
-                  }
-                  placeholder="Short Description / Tagline"
-                />
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Designation
+                  </label>
+                  <input
+                    value={formData.designation}
+                    onChange={(e) =>
+                      setFormData({ ...formData, designation: e.target.value })
+                    }
+                    placeholder="Designation / Role"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Short Desc
+                  </label>
+                  <textarea
+                    value={formData.short_desc}
+                    onChange={(e) =>
+                      setFormData({ ...formData, short_desc: e.target.value })
+                    }
+                    placeholder="Short Description / Tagline"
+                    rows={6}
+                  />
+                </div>
 
                 <div className="cover-upload">
                   <label>Profile Photo</label>
