@@ -1586,7 +1586,7 @@ export const PETRELOC = [
 // ////////////////////////////////////////////////////////////////////////////
 
 export const CAROUSELCOL = [
-  // { Header: "ID", accessor: "pet_id" },
+  { Header: "Slide Number", accessor: "slide_number" },
   {
     Header: "Image",
     accessor: "image_url",

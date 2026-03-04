@@ -2,20 +2,13 @@ import React, { useState } from "react";
 import cross from "../assets/cross.png";
 import imageicon from "../assets/Imageicon.png";
 import { toast } from "react-toastify";
-import { url } from "../utils/urls.js";           // ← you may not need this anymore
-import axios from "axios";
 import supabase from "../utils/supabaseConfig.js";
 
 export default function Carouselcreatepop(props) {
-  const [picture, setPicture] = useState(null);   // better to start with null
-  const [preview, setPreview] = useState(null);   // optional: better preview handling
+  const [picture, setPicture] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [slideNumber, setSlideNumber] = useState("");   // ✅ NEW STATE
   const [uploading, setUploading] = useState(false);
-
-  // Removed unused carousel state since we're only saving image now
-  // If you later need description/category/status → add them back
-
-  const authToken = localStorage.getItem("authToken") || "";
-  const session_id = localStorage.getItem("session_id") || "";
 
   function handlePicture(event) {
     const file = event.target.files?.[0];
@@ -33,25 +26,32 @@ export default function Carouselcreatepop(props) {
       return;
     }
 
+    if (!slideNumber) {
+      toast.error("Please enter slide number");
+      return;
+    }
+
     setUploading(true);
 
     try {
-      // 1. Create unique filename (avoid overwrites)
+      // 1️⃣ Create unique filename
       const fileExt = picture.name.split(".").pop().toLowerCase();
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-      const filePath = `${fileName}`;   // optional folder inside bucket
+      const fileName = `${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2)}.${fileExt}`;
+      const filePath = `${fileName}`;
 
-      // 2. Upload to Supabase Storage → bucket: "Images"
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      // 2️⃣ Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
         .from("Images")
         .upload(filePath, picture, {
           cacheControl: "3600",
-          upsert: false,               // don't overwrite if same name (unlikely)
+          upsert: false,
         });
 
       if (uploadError) throw uploadError;
 
-      // 3. Get public URL
+      // 3️⃣ Get public URL
       const { data: urlData } = supabase.storage
         .from("Images")
         .getPublicUrl(filePath);
@@ -62,26 +62,23 @@ export default function Carouselcreatepop(props) {
         throw new Error("Could not get public URL");
       }
 
-      // 4. Save to database (carousel table)
+      // 4️⃣ Insert into database (INCLUDING slide_number ✅)
       const { error: dbError } = await supabase
         .from("carousel")
         .insert({
           image_url: publicUrl,
-          // Add other fields when you need them, e.g.:
-          // description: "...",
-          // category: "...",
-          // status: true,
-          // created_at: new Date().toISOString(),
+          slide_number: Number(slideNumber),   // ✅ SAVE HERE
         });
 
       if (dbError) throw dbError;
 
       toast.success("Carousel image added successfully!");
-      
+
       // Reset form
       setPicture(null);
       setPreview(null);
-      props.fetchdata?.();           // refresh list
+      setSlideNumber("");
+      props.fetchdata?.();
       props.setTrigger(false);
 
     } catch (error) {
@@ -102,6 +99,7 @@ export default function Carouselcreatepop(props) {
             onClick={() => {
               setPicture(null);
               setPreview(null);
+              setSlideNumber("");
               props.setTrigger(false);
             }}
           >
@@ -110,6 +108,26 @@ export default function Carouselcreatepop(props) {
         </div>
 
         <div className="pop-inputs">
+          {/* ✅ SLIDE NUMBER FIELD */}
+          <div className="linkedpop">
+            <span className="form-headings half">Slide Number</span>
+            <div className="form-row">
+              <input
+                type="number"
+                placeholder="Enter slide number"
+                value={slideNumber}
+                onChange={(e) => setSlideNumber(e.target.value)}
+                disabled={uploading}
+                style={{
+                  width: "100%",
+                  height: "40px",
+                  padding: "8px",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* IMAGE SECTION */}
           <div className="linkedpop">
             <span className="form-headings half">Upload Image</span>
             <div className="form-row">
@@ -135,7 +153,6 @@ export default function Carouselcreatepop(props) {
                   />
                 </div>
               </div>
-              <div className="empty-image"></div>
             </div>
           </div>
 
@@ -145,6 +162,7 @@ export default function Carouselcreatepop(props) {
               onClick={() => {
                 setPicture(null);
                 setPreview(null);
+                setSlideNumber("");
                 props.setTrigger(false);
               }}
               style={{ height: "40px", padding: "10px" }}
@@ -152,11 +170,12 @@ export default function Carouselcreatepop(props) {
             >
               Cancel
             </button>
+
             <button
               className="seller-save seller-btn"
               onClick={handleSubmit}
               style={{ height: "40px", padding: "10px" }}
-              disabled={uploading || !picture}
+              disabled={uploading || !picture || !slideNumber}
             >
               {uploading ? "Uploading..." : "Save"}
             </button>
