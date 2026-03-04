@@ -124,6 +124,66 @@ export default function DepartmentDetail() {
     fetchData();
   }, [initialDepartment?.name, refreshKey]);
 
+  // const handleSaveDepartment = async () => {
+  //   if (!department?.department_id) return;
+
+  //   toast("Updating department...", { autoClose: false });
+
+  //   try {
+  //     let coverUrl = department.cover_img;
+
+  //     if (coverPhoto) {
+  //       const fileExt =
+  //         coverPhoto.name.split(".").pop()?.toLowerCase() || "jpg";
+  //       const fileName = `${department.department_id}-${Date.now()}.${fileExt}`;
+  //       const filePath = `${fileName}`;
+
+  //       const { error: uploadError } = await supabase.storage
+  //         .from("Departments")
+  //         .upload(filePath, coverPhoto, {
+  //           cacheControl: "3600",
+  //           upsert: false,
+  //         });
+
+  //       if (uploadError) throw uploadError;
+
+  //       const { data: publicUrlData } = supabase.storage
+  //         .from("Departments")
+  //         .getPublicUrl(filePath);
+
+  //       coverUrl = publicUrlData.publicUrl;
+  //     }
+
+  //     const updatePayload = {
+  //       name: deptFormData.name.trim(),
+  //       desc: deptFormData.desc.trim(),
+  //       short_desc: deptFormData.short_desc.trim(),
+  //       fee: Number(deptFormData.fee) || 0,
+  //       cover_img: coverUrl,
+  //       sort_number: deptFormData.sort_number
+  //         ? parseInt(deptFormData.sort_number, 10)
+  //         : null, // ← added
+  //     };
+
+  //     const { error: updateError } = await supabase
+  //       .from("departments")
+  //       .update(updatePayload)
+  //       .eq("department_id", department.department_id);
+
+  //     if (updateError) throw updateError;
+
+  //     toast.dismiss();
+  //     toast.success("Department updated successfully");
+
+  //     setIsDeptModalOpen(false);
+  //     setCoverPhoto(null);
+  //     setRefreshKey((k) => k + 1);
+  //   } catch (err) {
+  //     toast.dismiss();
+  //     console.error(err);
+  //     toast.error(err.message || "Failed to update department");
+  //   }
+  // };
   const handleSaveDepartment = async () => {
     if (!department?.department_id) return;
 
@@ -132,6 +192,7 @@ export default function DepartmentDetail() {
     try {
       let coverUrl = department.cover_img;
 
+      // ───── Upload Cover If Changed ─────
       if (coverPhoto) {
         const fileExt =
           coverPhoto.name.split(".").pop()?.toLowerCase() || "jpg";
@@ -154,15 +215,65 @@ export default function DepartmentDetail() {
         coverUrl = publicUrlData.publicUrl;
       }
 
+      const newSortNumber =
+        deptFormData.sort_number !== ""
+          ? parseInt(deptFormData.sort_number, 10)
+          : null;
+
+      // ───── HANDLE SORT NUMBER SAFELY ─────
+      if (newSortNumber !== null && newSortNumber !== department.sort_number) {
+        const { data: existingDept, error: checkError } = await supabase
+          .from("departments")
+          .select("department_id, sort_number")
+          .eq("sort_number", newSortNumber)
+          .neq("department_id", department.department_id)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        if (existingDept) {
+          // STEP 1: move existing to temp value
+          const tempValue = -999999; // temporary safe value
+
+          const { error: tempError } = await supabase
+            .from("departments")
+            .update({ sort_number: tempValue })
+            .eq("department_id", existingDept.department_id);
+
+          if (tempError) throw tempError;
+
+          // STEP 2: update current department to new number
+          const { error: updateCurrentError } = await supabase
+            .from("departments")
+            .update({ sort_number: newSortNumber })
+            .eq("department_id", department.department_id);
+
+          if (updateCurrentError) throw updateCurrentError;
+
+          // STEP 3: assign old number to swapped department
+          const { error: finalSwapError } = await supabase
+            .from("departments")
+            .update({ sort_number: department.sort_number })
+            .eq("department_id", existingDept.department_id);
+
+          if (finalSwapError) throw finalSwapError;
+        } else {
+          // no duplicate → update normally
+          const { error } = await supabase
+            .from("departments")
+            .update({ sort_number: newSortNumber })
+            .eq("department_id", department.department_id);
+
+          if (error) throw error;
+        }
+      }
+
+      // ───── UPDATE OTHER FIELDS ─────
       const updatePayload = {
-        name: deptFormData.name.trim(),
         desc: deptFormData.desc.trim(),
         short_desc: deptFormData.short_desc.trim(),
         fee: Number(deptFormData.fee) || 0,
         cover_img: coverUrl,
-        sort_number: deptFormData.sort_number
-          ? parseInt(deptFormData.sort_number, 10)
-          : null, // ← added
       };
 
       const { error: updateError } = await supabase
@@ -184,7 +295,6 @@ export default function DepartmentDetail() {
       toast.error(err.message || "Failed to update department");
     }
   };
-
   const handleDeleteDepartment = async () => {
     if (!department?.department_id) return;
 
@@ -773,7 +883,7 @@ export default function DepartmentDetail() {
                       })
                     }
                     placeholder="Short Description"
-                     rows={6}
+                    rows={6}
                   />
                 </div>
                 <div>
